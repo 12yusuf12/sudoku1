@@ -167,7 +167,7 @@ int main() {
         printSudoku(sudoku);
 
         while (true) {
-                po:
+                up:
             cout << "Enter row, column, and number (or -1 to exit): ";
             int row, col, num, i;
             cin >> row;
@@ -180,7 +180,7 @@ int main() {
                 if(sudoku_restore[row][col]==i){
                         cout << "Invalid Sudoku configuration. you cannot change the sudoku board." << endl;
                         printSudoku(sudoku);
-                        goto po;
+                        goto up;
                 }
             }
 
@@ -269,7 +269,7 @@ int main() {
                 while (true) {
 
 
-                        po2:
+                        up2:
             cout << "Enter row, column, and number (or -1 to exit): ";
             int row, col, num, i;
             cin >> row;
@@ -283,7 +283,7 @@ int main() {
                 if(sudoku_restore[row][col]==i){
                         cout << "Invalid Sudoku configuration. you cannot change the sudoku board." << endl;
                         printSudoku(sudoku);
-                        goto po2;
+                        goto up2;
                 }
             }
 
@@ -324,4 +324,3 @@ int main() {
 
     return 0;
 }
-
