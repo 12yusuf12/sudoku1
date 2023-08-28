@@ -4,11 +4,14 @@
 #include <ctime>
 #include <cstdlib>
 #include <random>
+#include <chrono>
+#include <bits/stdc++.h>
 
 using namespace std;
 
 const int N = 9;
 const int emptyValue = 0;
+
 bool isSafe(vector<vector<int>>& grid, int row, int col, int num) {
 
     for (int x = 0; x < N; x++) {
@@ -21,7 +24,7 @@ bool isSafe(vector<vector<int>>& grid, int row, int col, int num) {
     int startCol = col - col % 3;
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            if (grid[startRow + i][startCol + j] == num) {
+            if (grid[i + startRow][j + startCol] == num) {
                 return false;
             }
         }
@@ -31,15 +34,21 @@ bool isSafe(vector<vector<int>>& grid, int row, int col, int num) {
 }
 
 bool solveSudoku(vector<vector<int>>& grid) {
-    for (int row = 0; row < N; row++) {
+        for (int row = 0; row < N; row++) {
         for (int col = 0; col < N; col++) {
             if (grid[row][col] == emptyValue) {
-                for (int num = 1; num <= 9; num++) {
+                vector<int> numbers = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+                random_shuffle(numbers.begin(), numbers.end());
+
+                for (int i = 0; i < N; i++) {
+                    int num = numbers[i];
                     if (isSafe(grid, row, col, num)) {
                         grid[row][col] = num;
+
                         if (solveSudoku(grid)) {
                             return true;
                         }
+
                         grid[row][col] = emptyValue;
                     }
                 }
@@ -50,16 +59,6 @@ bool solveSudoku(vector<vector<int>>& grid) {
     return true;
 }
 
-void removeCells(vector<vector<int>>& grid, int toRemove) {
-    while (toRemove > 0) {
-        int i = rand() % N;
-        int j = rand() % N;
-        if (grid[i][j] != emptyValue) {
-            grid[i][j] = emptyValue;
-            toRemove--;
-        }
-    }
-}
 void generateSudoku(vector<vector<int>>& grid) {
     srand(time(0));
     for (int i = 0; i < N; i++) {
@@ -67,9 +66,20 @@ void generateSudoku(vector<vector<int>>& grid) {
             grid[i][j] = emptyValue;
         }
     }
+    if (solveSudoku(grid)) {
 
-    solveSudoku(grid);
+    }
+}
 
+void removeCells(vector<vector<int>>& grid, int removeCount ) {
+        while (removeCount > 0) {
+            int row = rand() % N;
+            int col = rand() % N;
+            if (grid[row][col] != emptyValue) {
+                grid[row][col] = emptyValue;
+                removeCount--;
+            }
+        }
 }
 
 void printSudoku(vector<vector<int>>& sudoku) {
@@ -87,18 +97,17 @@ void printSudoku(vector<vector<int>>& sudoku) {
     }
 }
 
-
 bool checkAccuracy(const vector<vector<int>>& solution, const vector<vector<int>>& grid) {
+    int count = 0;
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
             if (grid[i][j] != emptyValue && grid[i][j] != solution[i][j]) {
-                return false;
+                count++;
             }
         }
     }
-    return true;
+    return count <= 1;
 }
-
 
 bool isValidSudoku(const vector<vector<int>>& grid) {
 
@@ -140,8 +149,20 @@ bool isValidSudoku(const vector<vector<int>>& grid) {
     return true;
 }
 
+bool isSudokuComplete(const vector<vector<int>>& sudoku) {
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            if (sudoku[i][j] == emptyValue) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
 int main() {
+    int difficultyLevel = 0;
+
     new1:
     cout << "Welcome to Sudoku Game!" << endl;
     cout << "1. New Game" << endl;
@@ -159,30 +180,52 @@ int main() {
     }
 
     if (choice == 1) {
+        if (difficultyLevel == 0) {
+            cout << "Please select a difficulty level from Options first." << endl;
+            goto new1;
+        }
+
         vector<vector<int>> sudoku(N, vector<int>(N, 0));
         vector<vector<int>> sudoku_restore(N, vector<int>(N, 0));
         generateSudoku(sudoku);
 
-        vector<vector<int>> solution = sudoku;
-
-        solveSudoku(solution);
-
-
-        int toRemove = N * N - 40;
-        removeCells(sudoku, toRemove);
-
+        if (difficultyLevel == 1) {
+            int removeCount =  N * N - 50;
+            removeCells(sudoku, removeCount);
             for (int i = 0; i < N; i ++) {
                 for (int j = 0; j < N; j ++){
                 sudoku_restore[i][j]=sudoku[i][j];
                 }
             }
+            cout << "Easy Sudoku Game:" << endl;
+        } else if (difficultyLevel == 2) {
+            int removeCount =  N * N - 45;
+            removeCells(sudoku, removeCount);
+            for (int i = 0; i < N; i ++) {
+                for (int j = 0; j < N; j ++){
+                sudoku_restore[i][j]=sudoku[i][j];
+                }
+            }
+            cout << "Medium Sudoku Game:" << endl;
+        } else if (difficultyLevel == 3) {
+            int removeCount =  N * N - 30;
+            removeCells(sudoku, removeCount);
+            for (int i = 0; i < N; i ++) {
+                for (int j = 0; j < N; j ++){
+                sudoku_restore[i][j]=sudoku[i][j];
+                }
+            }
+            cout << "Hard Sudoku Game:" << endl;
+        }
 
-        cout << "Random Sudoku Game: " <<endl;
+        vector<vector<int>> solution = sudoku;
+        solveSudoku(solution);
         printSudoku(sudoku);
 
 
-        while (true) {
-                up:
+        while (!isSudokuComplete(sudoku)) {
+                up2:
+                new2:
             cout << "Enter row, column, and number (or -1 to exit): ";
             int row, col, num, i;
             cin >> row;
@@ -190,6 +233,12 @@ int main() {
                 break;
             }
             cin >> col >> num;
+        if (cin.fail()) {
+        cout << "\nYou entered a character. Please enter a numeric option.\n" << endl;
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        goto new2;
+    }
 
                 row=row-1;
                 col=col-1;
@@ -198,14 +247,11 @@ int main() {
                 if(sudoku_restore[row][col]==i){
                         cout << "Invalid Sudoku configuration. you cannot change the sudoku board." << endl;
                         printSudoku(sudoku);
-                        goto up;
+                        goto up2;
                 }
             }
         }
-
             if (row >= 0 && row < N && col >= 0 && col < N) {
-
-
                 if (num >= 1 && num <= 9) {
 
                     sudoku[row][col] = num;
@@ -214,7 +260,7 @@ int main() {
 
                 if (isValidSudoku(sudoku)) {
                 if (checkAccuracy(solution, sudoku)) {
-                    cout << "Congratulations! Your solution is correct." << endl;
+                    cout << "Congratulations!" << endl;
                 } else {
                     cout << "Keep trying! Your solution is not correct yet." << endl;
                 }
@@ -234,8 +280,9 @@ int main() {
             }
         }
     }
-    else if (choice == 2) {
 
+     else if (choice == 2) {
+        new3:
         cout << "Options:" << endl;
         cout << "1. Easy" << endl;
         cout << "2. Medium" << endl;
@@ -244,102 +291,22 @@ int main() {
         int option;
         cin >> option;
 
-        vector<vector<int>> sudoku(N, vector<int>(N, 0));
-        vector<vector<int>> sudoku_restore(N, vector<int>(N, 0));
-        generateSudoku(sudoku);
-
-
+        if (cin.fail()) {
+        cout << "\nYou entered a character. Please enter a numeric option.\n" << endl;
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        goto new3;
+    }
         if (option == 1) {
-            int toRemove = N * N - 50;
-            removeCells(sudoku, toRemove);
-
-            for (int i = 0; i < N; i ++) {
-                for (int j = 0; j < N; j ++){
-                sudoku_restore[i][j]=sudoku[i][j];
-
-                }
-            }
-            cout << "Easy Sudoku Game:" << endl;
+            difficultyLevel = 1;
         } else if (option == 2) {
-            int toRemove = N * N - 45;
-            removeCells(sudoku, toRemove);
-            for (int i = 0; i < N; i ++) {
-                for (int j = 0; j < N; j ++){
-                sudoku_restore[i][j]=sudoku[i][j];
-
-                }
-            }
-            cout << "Medium Sudoku Game:" << endl;
+            difficultyLevel = 2;
         } else if (option == 3) {
-            int toRemove = N * N - 30;
-            removeCells(sudoku, toRemove);
-                        for (int i = 0; i < N; i ++) {
-                for (int j = 0; j < N; j ++){
-                sudoku_restore[i][j]=sudoku[i][j];
-                }
-            }
-
-            cout << "Hard Sudoku Game:" << endl;
+            difficultyLevel = 3;
+        } else {
+            cout << "Invalid option. Please select a valid difficulty option (1, 2, or 3)." << endl;
         }
-
-        vector<vector<int>> solution = sudoku;
-        solveSudoku(solution);
-        printSudoku(sudoku);
-
-
-        while (true) {
-                up2:
-            cout << "Enter row, column, and number (or -1 to exit): ";
-            int row, col, num, i;
-            cin >> row;
-            if (row == -1) {
-                break;
-            }
-            cin >> col >> num;
-
-                row=row-1;
-                col=col-1;
-             if(row>=0 && row<=8 && col>=0 && col<=8){
-            for(i = 1; i <= 9; i ++){
-                if(sudoku_restore[row][col]==i){
-                        cout << "Invalid Sudoku configuration. you cannot change the sudoku board." << endl;
-                        printSudoku(sudoku);
-                        goto up2;
-                }
-            }
-        }
-
-            if (row >= 0 && row < N && col >= 0 && col < N) {
-
-
-                if (num >= 1 && num <= 9) {
-
-                    sudoku[row][col] = num;
-                    cout << "Updated Sudoku Game:" << endl;
-                    printSudoku(sudoku);
-
-                if (isValidSudoku(sudoku)) {
-                if (checkAccuracy(solution, sudoku)) {
-                    cout << "Congratulations! Your solution is correct." << endl;
-                } else {
-                    cout << "Keep trying! Your solution is not correct yet." << endl;
-                }
-            } else {
-                cout << "Invalid Sudoku configuration. Please check your entries." << endl;
-            }
-                }else if (num == 0) {
-                    sudoku[row][col] = emptyValue;
-                    cout << "Updated Sudoku Game:" << endl;
-                    printSudoku(sudoku);
-                } else {
-                    cout << "Invalid number. Please enter a number between 1 and 9 or 0 to delete." << endl;
-                }
-            }
-             else{
-                cout << "Invalid coordinates. Please enter row and column between 1 and 9." << endl;
-            }
-        }
-
+        goto new1;
     }
 
      else if (choice == 3) {
